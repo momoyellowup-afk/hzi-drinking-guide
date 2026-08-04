@@ -1,0 +1,6 @@
+- [x] Bold Chinese sans typography
+- [x] Complete store models in navigation
+- [x] Grounded store hero composition
+- [x] Fuller store introduction layout
+- [x] Preserved Carousel interaction with stronger snap pacing
+- [x] Existing Netlify site target retained
