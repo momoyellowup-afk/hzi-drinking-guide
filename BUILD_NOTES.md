@@ -1,0 +1,1 @@
+Refinement v2 is intentionally built from source on Linux/Netlify. Brand media is referenced from the prior immutable production deploy during this handoff so the supplied store models are not altered.
