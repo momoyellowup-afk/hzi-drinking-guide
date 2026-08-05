@@ -1,8 +1,6 @@
 (() => {
-  const PRIMARY_AUDIO_URL = "/brand/fresh-house.mp3";
-  const FALLBACK_AUDIO_URL = "https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/brand-soundtrack.m4a";
+  const AUDIO_URL = "/brand/young-house.wav";
   let installed = false;
-  let usingFallback = false;
   let wantsAudio = false;
 
   const getAudio = () => document.querySelector(".brand-app audio");
@@ -18,59 +16,36 @@
     if (span) span.textContent = isPlaying ? "SOUND ON" : "SOUND OFF";
   };
 
-  const switchToFallback = () => {
-    const audio = getAudio();
-    if (!(audio instanceof HTMLAudioElement) || usingFallback) return;
-    usingFallback = true;
-    const wasTryingToPlay = wantsAudio;
-    audio.src = FALLBACK_AUDIO_URL;
-    audio.load();
-    if (wasTryingToPlay) {
-      void audio.play().then(syncButton).catch(() => undefined);
-    }
-  };
-
   const attemptPlay = () => {
     const audio = getAudio();
     if (!(audio instanceof HTMLAudioElement) || !audio.paused) return;
     wantsAudio = true;
-    audio.play().then(syncButton).catch(() => {
-      if (!usingFallback) switchToFallback();
-    });
+    void audio.play().then(syncButton).catch(() => undefined);
   };
 
   const install = () => {
     const audio = getAudio();
     const button = getButton();
-    if (!(audio instanceof HTMLAudioElement) || !(button instanceof HTMLElement)) return false;
+    const screen = document.querySelector(".app-screen");
+    if (!(audio instanceof HTMLAudioElement) || !(button instanceof HTMLElement) || !(screen instanceof HTMLElement)) return false;
     if (installed) return true;
     installed = true;
 
-    audio.src = PRIMARY_AUDIO_URL;
+    audio.src = AUDIO_URL;
     audio.loop = true;
     audio.preload = "auto";
-    audio.volume = 0.32;
+    audio.volume = 0.34;
     audio.setAttribute("playsinline", "");
     audio.load();
 
-    const slowLoadFallback = window.setTimeout(() => {
-      if (!usingFallback && audio.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) switchToFallback();
-    }, 2600);
-
-    audio.addEventListener("loadeddata", () => window.clearTimeout(slowLoadFallback), { once: true });
-    audio.addEventListener("error", () => switchToFallback());
     audio.addEventListener("play", () => {
       wantsAudio = true;
       syncButton();
     });
     audio.addEventListener("pause", syncButton);
 
-    ["touchstart", "pointerdown", "mousedown", "keydown", "wheel"].forEach((type) => {
-      window.addEventListener(type, (event) => {
-        const target = event.target;
-        if (target instanceof Element && target.closest(".sound-toggle")) return;
-        attemptPlay();
-      }, { capture: true, passive: true });
+    ["touchstart", "pointerdown", "mousedown", "wheel"].forEach((type) => {
+      screen.addEventListener(type, attemptPlay, { capture: true, passive: true });
     });
 
     document.addEventListener("click", (event) => {
@@ -78,10 +53,8 @@
       if (!(target instanceof Element) || !target.closest(".sound-toggle")) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (audio.paused) {
-        wantsAudio = true;
-        attemptPlay();
-      } else {
+      if (audio.paused) attemptPlay();
+      else {
         wantsAudio = false;
         audio.pause();
       }
