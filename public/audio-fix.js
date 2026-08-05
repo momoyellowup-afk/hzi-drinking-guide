@@ -1,7 +1,9 @@
 (() => {
-  const AUDIO_URL = "https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/brand-soundtrack.m4a";
+  const PRIMARY_AUDIO_URL = "/brand/fresh-house.mp3";
+  const FALLBACK_AUDIO_URL = "https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/brand-soundtrack.m4a";
   let installed = false;
-  let playing = false;
+  let usingFallback = false;
+  let wantsAudio = false;
 
   const getAudio = () => document.querySelector(".brand-app audio");
   const getButton = () => document.querySelector(".sound-toggle");
@@ -16,15 +18,24 @@
     if (span) span.textContent = isPlaying ? "SOUND ON" : "SOUND OFF";
   };
 
+  const switchToFallback = () => {
+    const audio = getAudio();
+    if (!(audio instanceof HTMLAudioElement) || usingFallback) return;
+    usingFallback = true;
+    const wasTryingToPlay = wantsAudio;
+    audio.src = FALLBACK_AUDIO_URL;
+    audio.load();
+    if (wasTryingToPlay) {
+      void audio.play().then(syncButton).catch(() => undefined);
+    }
+  };
+
   const attemptPlay = () => {
     const audio = getAudio();
     if (!(audio instanceof HTMLAudioElement) || !audio.paused) return;
-    audio.play().then(() => {
-      playing = true;
-      syncButton();
-    }).catch(() => {
-      // Keep all gesture listeners installed and retry on the next user gesture.
-      playing = false;
+    wantsAudio = true;
+    audio.play().then(syncButton).catch(() => {
+      if (!usingFallback) switchToFallback();
     });
   };
 
@@ -35,24 +46,25 @@
     if (installed) return true;
     installed = true;
 
-    audio.src = AUDIO_URL;
+    audio.src = PRIMARY_AUDIO_URL;
     audio.loop = true;
     audio.preload = "auto";
     audio.volume = 0.32;
     audio.setAttribute("playsinline", "");
     audio.load();
 
-    audio.addEventListener("play", () => {
-      playing = true;
-      syncButton();
-    });
-    audio.addEventListener("pause", () => {
-      playing = false;
-      syncButton();
-    });
+    const slowLoadFallback = window.setTimeout(() => {
+      if (!usingFallback && audio.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) switchToFallback();
+    }, 2600);
 
-    // A swipe starts with touchstart/pointerdown, so playback is requested
-    // inside the user's first gesture just like the original working version.
+    audio.addEventListener("loadeddata", () => window.clearTimeout(slowLoadFallback), { once: true });
+    audio.addEventListener("error", () => switchToFallback());
+    audio.addEventListener("play", () => {
+      wantsAudio = true;
+      syncButton();
+    });
+    audio.addEventListener("pause", syncButton);
+
     ["touchstart", "pointerdown", "mousedown", "keydown", "wheel"].forEach((type) => {
       window.addEventListener(type, (event) => {
         const target = event.target;
@@ -61,19 +73,22 @@
       }, { capture: true, passive: true });
     });
 
-    // Own the SOUND button so the React window pointerdown handler cannot
-    // start playback and then have the same tap immediately pause it again.
     document.addEventListener("click", (event) => {
       const target = event.target;
       if (!(target instanceof Element) || !target.closest(".sound-toggle")) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (audio.paused) attemptPlay();
-      else audio.pause();
+      if (audio.paused) {
+        wantsAudio = true;
+        attemptPlay();
+      } else {
+        wantsAudio = false;
+        audio.pause();
+      }
     }, true);
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && playing && audio.paused) attemptPlay();
+      if (!document.hidden && wantsAudio && audio.paused) attemptPlay();
     });
 
     syncButton();
