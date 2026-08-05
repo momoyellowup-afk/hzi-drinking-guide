@@ -174,7 +174,7 @@ export default function Prototype() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = 0.36;
+    audio.volume = 0.32;
     const begin = () => {
       audio.play().then(() => setPlaying(true)).catch(() => undefined);
       window.removeEventListener("pointerdown", begin);
@@ -212,7 +212,7 @@ export default function Prototype() {
 
   return (
     <div className="brand-app">
-      <audio ref={audioRef} src="https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/brand-soundtrack.m4a" loop preload="auto" />
+      <audio ref={audioRef} src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" loop preload="auto" />
       <button className="sound-toggle" onClick={toggleAudio} aria-label={playing ? "关闭背景音乐" : "播放背景音乐"}>
         {playing ? <SpeakerLoudIcon /> : <SpeakerOffIcon />}
         <span>{playing ? "SOUND ON" : "SOUND OFF"}</span>
@@ -254,7 +254,7 @@ export default function Prototype() {
                 <div className="chapter-index">{String(index + 1).padStart(2, "0")} / 07</div>
                 <div className="model-stage">
                   <div className="model-halo" />
-                  <img src={store.model} alt={`${store.display} 门店视觉模型`} className="store-model" draggable={false} />
+                  <img src={store.model} alt={`${store.display} 门店视觉模型`} className="store-model" style={store.id === "store-mustang" || store.id === "store-7" ? { scale: "1.12" } : undefined} draggable={false} />
                 </div>
                 <div className="store-title-block">
                   <p>{store.note}</p>
