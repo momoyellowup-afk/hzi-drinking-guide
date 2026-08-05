@@ -19,6 +19,7 @@ type Store = {
   moment: string;
 };
 
+// All copy and store assets live here so future address/product updates do not require layout work.
 const stores: Store[] = [
   {
     id: "store-1",
@@ -72,16 +73,16 @@ const stores: Store[] = [
     id: "store-5",
     number: "NO.5",
     display: "胡子 NO.5",
-    eyebrow: "前店后厂",
-    tags: ["精酿工厂", "品牌窗口"],
+    eyebrow: "胡子全球酿造中心",
+    tags: ["全球酿造", "品牌窗口"],
     scene: "https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/scenes/store-5-scene.webp",
     model: "https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/store-5-cut.png",
     intro: "五店把“喝到一杯酒”和“看见一杯酒如何诞生”放在同一个空间。前店是热闹的品牌窗口，后厂是真实发生的酿造现场，酒液、设备与发酵过程共同构成这里最直接的魅力。",
-    note: "FRONT BAR · BACK BREWERY",
+    note: "GLOBAL BREWING CENTER",
     accent: "#e69f2a",
     glow: "rgba(230,159,42,.36)",
-    profile: ["前店后厂", "现场酿造", "品牌窗口"],
-    statement: "从发酵现场，到你手里的这一杯。",
+    profile: ["全球酿造", "现场酿造", "品牌窗口"],
+    statement: "从全球酿造中心，到你手里的这一杯。",
     moment: "看现场酿造 · 朋友聚会 · 喝最新鲜的一杯",
   },
   {
@@ -118,14 +119,14 @@ const stores: Store[] = [
   },
   {
     id: "store-jump",
-    number: "JUMP",
+    number: "JUMP BURGER",
     display: "JUMP BURGER",
-    eyebrow: "现代美式厨房",
+    eyebrow: "JUMP 跳进厨房",
     tags: ["汉堡", "玩乐派"],
     scene: "https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/scenes/store-jump-scene.webp",
     model: "https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/store-jump-cut.png",
     intro: "JUMP BURGER 用最直接的味觉和节奏接住胡子的玩乐属性。开放厨房、汉堡与轻松的用餐氛围同时发生，它更年轻、更明快，也让“喝一杯”自然延伸成“吃点好的再继续玩”。",
-    note: "BURGER · OPEN KITCHEN · PLAY",
+    note: "JUMP BURGER · OPEN KITCHEN",
     accent: "#ff9f2f",
     glow: "rgba(255,159,47,.36)",
     profile: ["开放厨房", "现代美式", "年轻玩乐"],
@@ -145,7 +146,7 @@ function goTo(id: string) {
 
 function ProductRail({ store }: { store: Store }) {
   return (
-    <Carousel ariaLabel={`${store.display} 三个特色产品`} className="product-carousel" contentClassName="product-track">
+    <Carousel ariaLabel={`${store.display} 三个特色产品`} className="product-carousel" contentClassName="product-track" showScrollbar draggingEnabled={false}>
       {[1, 2, 3].map((slot) => (
         <article className="product-card" key={slot} style={themeVars(store)}>
           <div className="product-visual" aria-label="产品即将公布">
