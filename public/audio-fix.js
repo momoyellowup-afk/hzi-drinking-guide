@@ -1,7 +1,7 @@
 (() => {
-  const AUDIO_URL = "https://6a71df349114394d792ef2ba--hzi-drinking-guide.netlify.app/brand/brand-soundtrack.m4a";
+  const AUDIO_URL = "/brand/young-house.wav";
   let installed = false;
-  let playing = false;
+  let shouldResume = false;
 
   const getAudio = () => document.querySelector(".brand-app audio");
   const getButton = () => document.querySelector(".sound-toggle");
@@ -19,61 +19,54 @@
   const attemptPlay = () => {
     const audio = getAudio();
     if (!(audio instanceof HTMLAudioElement) || !audio.paused) return;
-    audio.play().then(() => {
-      playing = true;
+    void audio.play().then(() => {
+      shouldResume = true;
       syncButton();
-    }).catch(() => {
-      // Keep all gesture listeners installed and retry on the next user gesture.
-      playing = false;
-    });
+    }).catch(() => undefined);
   };
 
   const install = () => {
     const audio = getAudio();
     const button = getButton();
-    if (!(audio instanceof HTMLAudioElement) || !(button instanceof HTMLElement)) return false;
+    const screen = document.querySelector(".app-screen");
+    if (!(audio instanceof HTMLAudioElement) || !(button instanceof HTMLElement) || !(screen instanceof HTMLElement)) return false;
     if (installed) return true;
     installed = true;
 
     audio.src = AUDIO_URL;
     audio.loop = true;
     audio.preload = "auto";
-    audio.volume = 0.32;
+    audio.volume = 0.34;
     audio.setAttribute("playsinline", "");
     audio.load();
 
     audio.addEventListener("play", () => {
-      playing = true;
+      shouldResume = true;
       syncButton();
     });
-    audio.addEventListener("pause", () => {
-      playing = false;
-      syncButton();
+    audio.addEventListener("pause", syncButton);
+
+    // The original site worked because a swipe begins with a real touch/pointer
+    // gesture. Keep retrying on user gestures until the browser accepts play().
+    ["touchstart", "pointerdown", "mousedown", "wheel"].forEach((type) => {
+      screen.addEventListener(type, attemptPlay, { capture: true, passive: true });
     });
 
-    // A swipe starts with touchstart/pointerdown, so playback is requested
-    // inside the user's first gesture just like the original working version.
-    ["touchstart", "pointerdown", "mousedown", "keydown", "wheel"].forEach((type) => {
-      window.addEventListener(type, (event) => {
-        const target = event.target;
-        if (target instanceof Element && target.closest(".sound-toggle")) return;
-        attemptPlay();
-      }, { capture: true, passive: true });
-    });
-
-    // Own the SOUND button so the React window pointerdown handler cannot
-    // start playback and then have the same tap immediately pause it again.
+    // Own the sound button so it never races the app's window-level first-tap handler.
     document.addEventListener("click", (event) => {
       const target = event.target;
       if (!(target instanceof Element) || !target.closest(".sound-toggle")) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       if (audio.paused) attemptPlay();
-      else audio.pause();
+      else {
+        shouldResume = false;
+        audio.pause();
+      }
     }, true);
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && playing && audio.paused) attemptPlay();
+      if (!document.hidden && shouldResume && audio.paused) attemptPlay();
     });
 
     syncButton();
